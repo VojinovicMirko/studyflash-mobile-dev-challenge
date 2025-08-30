@@ -1,10 +1,13 @@
+import { ChatInput } from "@/components/ChatInput";
+import { Colors } from "@/constants/Colors";
 import { useAppContext } from "@/context/AppContext";
+import { useColorScheme } from "@/hooks/useColorScheme";
 import { generateAPIUrl } from "@/utils";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { fetch as expoFetch } from "expo/fetch";
 import React, { useEffect, useState } from "react";
-import { SafeAreaView, ScrollView, Text, TextInput, View } from "react-native";
+import { SafeAreaView, ScrollView, Text, View } from "react-native";
 
 export default function App() {
   const [input, setInput] = useState("");
@@ -26,7 +29,12 @@ export default function App() {
   }, [isRegenerating]);
 
   return (
-    <SafeAreaView style={{ height: "100%" }}>
+    <SafeAreaView
+      style={{
+        height: "100%",
+        backgroundColor: Colors[useColorScheme() ?? "light"].background,
+      }}
+    >
       {error ? (
         <Text
           style={{
@@ -66,20 +74,17 @@ export default function App() {
               </View>
             ))}
           </ScrollView>
-          <View style={{ marginTop: 8 }}>
-            <TextInput
-              style={{ backgroundColor: "white", padding: 8 }}
-              placeholder="Say something..."
-              value={input}
-              onChange={(e) => setInput(e.nativeEvent.text)}
-              onSubmitEditing={(e) => {
-                e.preventDefault();
-                sendMessage({ text: input });
-                setInput("");
-              }}
-              autoFocus={true}
-            />
-          </View>
+
+          <ChatInput
+            value={input}
+            onChangeText={(text) => setInput(text)}
+            onSend={() => {
+              sendMessage({ text: input });
+              setInput("");
+            }}
+            placeholder="Ask Anything"
+            autoFocus={true}
+          />
         </View>
       )}
     </SafeAreaView>
