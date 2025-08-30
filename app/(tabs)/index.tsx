@@ -1,4 +1,5 @@
 import { ChatInput } from "@/components/ChatInput";
+import { MessageActions } from "@/components/MessageActions";
 import { Colors } from "@/constants/Colors";
 import { useAppContext } from "@/context/AppContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -7,10 +8,11 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { fetch as expoFetch } from "expo/fetch";
 import React, { useEffect, useState } from "react";
-import { SafeAreaView, ScrollView, Text, View } from "react-native";
+import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function App() {
   const [input, setInput] = useState("");
+  const colorScheme = useColorScheme();
   const { isRegenerating, setIsRegenerating } = useAppContext();
 
   const { messages, error, sendMessage, setMessages } = useChat({
@@ -30,43 +32,62 @@ export default function App() {
 
   return (
     <SafeAreaView
-      style={{
-        height: "100%",
-        backgroundColor: Colors[useColorScheme() ?? "light"].background,
-      }}
+      style={[
+        styles.safeArea,
+        { backgroundColor: Colors[useColorScheme() ?? "light"].background },
+      ]}
     >
       {error ? (
-        <Text
-          style={{
-            paddingHorizontal: 8,
-            color: "red",
-          }}
-        >
-          {error.message}
-        </Text>
+        <Text style={styles.errorText}>{error.message}</Text>
       ) : (
-        <View
-          style={{
-            height: "95%",
-            display: "flex",
-            flexDirection: "column",
-            paddingHorizontal: 8,
-          }}
-        >
-          <ScrollView style={{ flex: 1 }}>
+        <View style={styles.container}>
+          <ScrollView style={styles.scrollView}>
             {messages.map((m) => (
-              <View key={m.id} style={{ marginVertical: 8 }}>
-                <View>
-                  <Text style={{ fontWeight: 700 }}>{m.role}</Text>
+              <View
+                key={m.id}
+                style={[
+                  styles.messageContainer,
+                  m.role === "user"
+                    ? styles.userMessage
+                    : styles.assistantMessage,
+                  {
+                    backgroundColor:
+                      m.role === "user"
+                        ? Colors[colorScheme ?? "light"].gray
+                        : "white",
+                  },
+                ]}
+              >
+                <View style={styles.messageContent}>
                   {m.parts.map((part, i) => {
                     switch (part.type) {
                       case "text":
-                        return <Text key={`${m.id}-${i}`}>{part.text}</Text>;
+                        return (
+                          <View
+                            key={`${m.id}-${i}`}
+                            style={styles.messagePartContainer}
+                          >
+                            <Text style={styles.messageText}>{part.text}</Text>
+                            {m.role === "assistant" && (
+                              <MessageActions text={part.text} />
+                            )}
+                          </View>
+                        );
                       case "tool-weather":
                         return (
-                          <Text key={`${m.id}-${i}`}>
-                            {JSON.stringify(part, null, 2)}
-                          </Text>
+                          <View
+                            key={`${m.id}-${i}`}
+                            style={styles.messagePartContainer}
+                          >
+                            <Text style={styles.messageText}>
+                              {JSON.stringify(part, null, 2)}
+                            </Text>
+                            {m.role === "assistant" && (
+                              <MessageActions
+                                text={JSON.stringify(part, null, 2)}
+                              />
+                            )}
+                          </View>
                         );
                     }
                   })}
@@ -90,3 +111,47 @@ export default function App() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    height: "100%",
+  },
+  errorText: {
+    paddingHorizontal: 8,
+    color: "red",
+  },
+  container: {
+    height: "95%",
+    display: "flex",
+    flexDirection: "column",
+    paddingHorizontal: 8,
+    marginVertical: 10,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  messageContainer: {
+    marginVertical: 4,
+    borderRadius: 12,
+    padding: 14,
+  },
+  userMessage: {
+    width: "50%",
+    alignSelf: "flex-end",
+  },
+  assistantMessage: {
+    width: "100%",
+    alignSelf: "flex-start",
+  },
+  messageContent: {
+    display: "flex",
+    gap: 0,
+  },
+  messagePartContainer: {
+    marginBottom: 4,
+  },
+  messageText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+});
