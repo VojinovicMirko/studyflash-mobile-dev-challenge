@@ -2,8 +2,8 @@ import { generateAPIUrl } from "@/utils";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { fetch as expoFetch } from "expo/fetch";
-import { useState } from "react";
-import { View, TextInput, ScrollView, Text, SafeAreaView } from "react-native";
+import React, { useState } from "react";
+import { SafeAreaView, ScrollView, Text, TextInput, View } from "react-native";
 
 export default function App() {
   const [input, setInput] = useState("");
@@ -15,54 +15,63 @@ export default function App() {
     onError: (error) => console.error(error, "ERROR"),
   });
 
-  if (error) return <Text>{error.message}</Text>;
-
   return (
     <SafeAreaView style={{ height: "100%" }}>
-      <View
-        style={{
-          height: "95%",
-          display: "flex",
-          flexDirection: "column",
-          paddingHorizontal: 8,
-        }}
-      >
-        <ScrollView style={{ flex: 1 }}>
-          {messages.map((m) => (
-            <View key={m.id} style={{ marginVertical: 8 }}>
-              <View>
-                <Text style={{ fontWeight: 700 }}>{m.role}</Text>
-                {m.parts.map((part, i) => {
-                  switch (part.type) {
-                    case "text":
-                      return <Text key={`${m.id}-${i}`}>{part.text}</Text>;
-                    case "tool-weather":
-                      return (
-                        <Text key={`${m.id}-${i}`}>
-                          {JSON.stringify(part, null, 2)}
-                        </Text>
-                      );
-                  }
-                })}
+      {error ? (
+        <Text
+          style={{
+            paddingHorizontal: 8,
+            color: "red",
+          }}
+        >
+          {error.message}
+        </Text>
+      ) : (
+        <View
+          style={{
+            height: "95%",
+            display: "flex",
+            flexDirection: "column",
+            paddingHorizontal: 8,
+          }}
+        >
+          <ScrollView style={{ flex: 1 }}>
+            {messages.map((m) => (
+              <View key={m.id} style={{ marginVertical: 8 }}>
+                <View>
+                  <Text style={{ fontWeight: 700 }}>{m.role}</Text>
+                  {m.parts.map((part, i) => {
+                    switch (part.type) {
+                      case "text":
+                        return <Text key={`${m.id}-${i}`}>{part.text}</Text>;
+                      case "tool-weather":
+                        return (
+                          <Text key={`${m.id}-${i}`}>
+                            {JSON.stringify(part, null, 2)}
+                          </Text>
+                        );
+                    }
+                  })}
+                </View>
               </View>
-            </View>
-          ))}
-        </ScrollView>
-        <View style={{ marginTop: 8 }}>
-          <TextInput
-            style={{ backgroundColor: "white", padding: 8 }}
-            placeholder="Say something..."
-            value={input}
-            onChange={(e) => setInput(e.nativeEvent.text)}
-            onSubmitEditing={(e) => {
-              e.preventDefault();
-              sendMessage({ text: input });
-              setInput("");
-            }}
-            autoFocus={true}
-          />
+            ))}
+          </ScrollView>
+          <View style={{ marginTop: 8 }}>
+            <TextInput
+              style={{ backgroundColor: "white", padding: 8 }}
+              placeholder="Say something..."
+              value={input}
+              onChange={(e) => setInput(e.nativeEvent.text)}
+              onSubmitEditing={(e) => {
+                e.preventDefault();
+                sendMessage({ text: input });
+                setInput("");
+              }}
+              autoFocus={true}
+            />
+          </View>
         </View>
-      </View>
+      )}
     </SafeAreaView>
   );
 }
