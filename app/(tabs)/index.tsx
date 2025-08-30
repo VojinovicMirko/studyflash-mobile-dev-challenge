@@ -1,19 +1,29 @@
+import { useAppContext } from "@/context/AppContext";
 import { generateAPIUrl } from "@/utils";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { fetch as expoFetch } from "expo/fetch";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SafeAreaView, ScrollView, Text, TextInput, View } from "react-native";
 
 export default function App() {
   const [input, setInput] = useState("");
-  const { messages, error, sendMessage } = useChat({
+  const { isRegenerating, setIsRegenerating } = useAppContext();
+
+  const { messages, error, sendMessage, setMessages } = useChat({
     transport: new DefaultChatTransport({
       fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl("/api/chat"),
     }),
     onError: (error) => console.error(error, "ERROR"),
   });
+
+  useEffect(() => {
+    if (isRegenerating) {
+      setMessages([]);
+      setIsRegenerating(false);
+    }
+  }, [isRegenerating]);
 
   return (
     <SafeAreaView style={{ height: "100%" }}>
