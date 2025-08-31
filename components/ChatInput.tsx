@@ -9,6 +9,7 @@ interface ChatInputProps {
   onSend: () => void;
   placeholder?: string;
   autoFocus?: boolean;
+  attachButtonDisabled: boolean;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -17,6 +18,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onSend,
   placeholder = "Message ChatGPT...",
   autoFocus = true,
+  attachButtonDisabled = true,
 }) => {
   const colorScheme = useColorScheme();
 
@@ -36,7 +38,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       >
         <TouchableOpacity
           style={{
-            backgroundColor: !value.trim()
+            backgroundColor: !attachButtonDisabled
               ? Colors[colorScheme ?? "light"].tint
               : colorScheme === "dark"
               ? "#3d3d3d"
@@ -48,12 +50,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             alignItems: "center",
             marginRight: 8,
           }}
-          disabled={!!value.trim()}
+          disabled={attachButtonDisabled}
           onPress={() => Alert.alert("Attachment", "Add an attachment")}
         >
           <Text
             style={{
-              color: !value.trim()
+              color: !attachButtonDisabled
                 ? "white"
                 : colorScheme === "dark"
                 ? "#9BA1A6"
@@ -77,6 +79,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           onChange={(e) => onChangeText(e.nativeEvent.text)}
           multiline
           autoFocus={autoFocus}
+          autoCorrect={false}
         />
         <TouchableOpacity
           style={{

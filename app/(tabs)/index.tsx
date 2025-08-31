@@ -32,7 +32,7 @@ export default function App() {
     string[]
   >([]);
 
-  const { messages, error, sendMessage, setMessages } = useChat({
+  const { messages, error, sendMessage, setMessages, status } = useChat({
     transport: new DefaultChatTransport({
       fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl("/api/chat"),
@@ -169,6 +169,7 @@ export default function App() {
               }}
               placeholder="Ask Anything"
               autoFocus={false}
+              attachButtonDisabled={status === "streaming"}
             />
           </View>
         </KeyboardAvoidingView>
