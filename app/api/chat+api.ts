@@ -1,5 +1,5 @@
-import { streamText, UIMessage, convertToModelMessages, tool } from "ai";
 import { google } from "@ai-sdk/google";
+import { convertToModelMessages, streamText, tool, UIMessage } from "ai";
 import { z } from "zod";
 
 export async function POST(req: Request) {
@@ -16,9 +16,17 @@ export async function POST(req: Request) {
         }),
         execute: async ({ location }) => {
           const temperature = Math.round(Math.random() * (90 - 32) + 32);
+          const humidity = Math.round(Math.random() * 100);
+          const windSpeed = Math.round(Math.random() * 20);
+          const condition = ["Sunny", "Cloudy", "Rainy", "Stormy"][
+            Math.floor(Math.random() * 4)
+          ];
           return {
             location,
             temperature,
+            humidity,
+            windSpeed,
+            condition,
           };
         },
       }),
