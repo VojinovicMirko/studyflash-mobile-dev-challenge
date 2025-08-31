@@ -59,14 +59,13 @@ export default function App() {
   ): WeatherData | null | undefined => {
     if (typeof input === "string") {
       try {
-        input = JSON.parse(input); // parsiramo string u objekt
+        input = JSON.parse(input);
       } catch {
         console.error("Invalid JSON string");
         return null;
       }
     }
 
-    // sada je input objekt, proveravamo da li ima potrebna polja i tipove
     if (
       typeof input === "object" &&
       input !== null &&
@@ -103,7 +102,6 @@ export default function App() {
     }
   }, [isRegenerating]);
 
-  // svaki put kad se content promeni, skroluje na kraj
   useEffect(() => {
     if (scrollRef.current) {
       (scrollRef.current as ScrollView).scrollToEnd({ animated: true });
@@ -128,7 +126,7 @@ export default function App() {
       ) : (
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : undefined}
-          keyboardVerticalOffset={80}
+          keyboardVerticalOffset={100}
         >
           <View style={styles.container}>
             {messages.length > 0 && (
@@ -248,11 +246,11 @@ const styles = StyleSheet.create({
     color: "red",
   },
   container: {
-    height: "95%",
     display: "flex",
+    height: "100%",
     flexDirection: "column",
     paddingHorizontal: 8,
-    marginVertical: 10,
+    paddingTop: 10,
     justifyContent: "space-between",
   },
   scrollView: {
