@@ -24,6 +24,11 @@ const MAPPING = {
   "square.and.pencil": "edit-square",
   ellipsis: "more-horiz",
   "line.3.horizontal": "menu",
+  "hand.thumbsup": "thumb-up-off-alt",
+  "hand.thumbsup.fill": "thumb-up",
+  "hand.thumbsdown": "thumb-down-off-alt",
+  "hand.thumbsdown.fill": "thumb-down",
+  "document.on.document": "content-copy",
 } as IconMapping;
 
 /**

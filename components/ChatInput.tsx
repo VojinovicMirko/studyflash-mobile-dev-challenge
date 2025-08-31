@@ -1,7 +1,7 @@
-import React from "react";
-import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import React from "react";
+import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 interface ChatInputProps {
   value: string;

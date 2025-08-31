@@ -1,5 +1,7 @@
 import { ChatInput } from "@/components/ChatInput";
 import { MessageActions } from "@/components/MessageActions";
+import { MessageSuggestions } from "@/components/MessageSuggestions";
+import { MESSAGE_ACTION_STATUS } from "@/constants";
 import { Colors } from "@/constants/Colors";
 import { useAppContext } from "@/context/AppContext";
 import { useColorScheme } from "@/hooks/useColorScheme";
@@ -8,12 +10,27 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { fetch as expoFetch } from "expo/fetch";
 import React, { useEffect, useState } from "react";
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import Markdown from "react-native-markdown-display";
+
+import {
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 export default function App() {
-  const [input, setInput] = useState("");
   const colorScheme = useColorScheme();
+
+  const [input, setInput] = useState("");
   const { isRegenerating, setIsRegenerating } = useAppContext();
+  const [likedMessageIndexes, setLikedMessagesIndexes] = useState<string[]>([]);
+  const [dislikedMessageIndexes, setDislikedMessagesIndexes] = useState<
+    string[]
+  >([]);
 
   const { messages, error, sendMessage, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -22,6 +39,14 @@ export default function App() {
     }),
     onError: (error) => console.error(error, "ERROR"),
   });
+
+  const likeCallback = (messageId: string) => {
+    setLikedMessagesIndexes([...likedMessageIndexes, messageId]);
+  };
+
+  const dislikeCallback = (messageId: string) => {
+    setDislikedMessagesIndexes([...dislikedMessageIndexes, messageId]);
+  };
 
   useEffect(() => {
     if (isRegenerating) {
@@ -40,73 +65,113 @@ export default function App() {
       {error ? (
         <Text style={styles.errorText}>{error.message}</Text>
       ) : (
-        <View style={styles.container}>
-          <ScrollView style={styles.scrollView}>
-            {messages.map((m) => (
-              <View
-                key={m.id}
-                style={[
-                  styles.messageContainer,
-                  m.role === "user"
-                    ? styles.userMessage
-                    : styles.assistantMessage,
-                  {
-                    backgroundColor:
-                      m.role === "user"
-                        ? Colors[colorScheme ?? "light"].gray
-                        : "white",
-                  },
-                ]}
-              >
-                <View style={styles.messageContent}>
-                  {m.parts.map((part, i) => {
-                    switch (part.type) {
-                      case "text":
-                        return (
-                          <View
-                            key={`${m.id}-${i}`}
-                            style={styles.messagePartContainer}
-                          >
-                            <Text style={styles.messageText}>{part.text}</Text>
-                            {m.role === "assistant" && (
-                              <MessageActions text={part.text} />
-                            )}
-                          </View>
-                        );
-                      case "tool-weather":
-                        return (
-                          <View
-                            key={`${m.id}-${i}`}
-                            style={styles.messagePartContainer}
-                          >
-                            <Text style={styles.messageText}>
-                              {JSON.stringify(part, null, 2)}
-                            </Text>
-                            {m.role === "assistant" && (
-                              <MessageActions
-                                text={JSON.stringify(part, null, 2)}
-                              />
-                            )}
-                          </View>
-                        );
-                    }
-                  })}
-                </View>
-              </View>
-            ))}
-          </ScrollView>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={80}
+        >
+          <View style={styles.container}>
+            {/* <Markdown>{copy}</Markdown> */}
 
-          <ChatInput
-            value={input}
-            onChangeText={(text) => setInput(text)}
-            onSend={() => {
-              sendMessage({ text: input });
-              setInput("");
-            }}
-            placeholder="Ask Anything"
-            autoFocus={true}
-          />
-        </View>
+            {messages.length > 0 && (
+              <ScrollView style={styles.scrollView}>
+                {messages.map((m) => (
+                  <View
+                    key={m.id}
+                    style={[
+                      styles.messageContainer,
+                      m.role === "user"
+                        ? styles.userMessage
+                        : styles.assistantMessage,
+                      {
+                        backgroundColor:
+                          m.role === "user"
+                            ? Colors[colorScheme ?? "light"].gray
+                            : "white",
+                      },
+                    ]}
+                  >
+                    <View style={styles.messageContent}>
+                      {m.parts.map((part, i) => {
+                        switch (part.type) {
+                          case "text":
+                            return (
+                              <View
+                                key={`${m.id}-${i}`}
+                                style={styles.messagePartContainer}
+                              >
+                                <Markdown>{part.text}</Markdown>
+                                {m.role === "assistant" && (
+                                  <MessageActions
+                                    id={m.id}
+                                    text={part.text}
+                                    status={
+                                      likedMessageIndexes.includes(m.id)
+                                        ? MESSAGE_ACTION_STATUS.LIKED
+                                        : dislikedMessageIndexes.includes(m.id)
+                                        ? MESSAGE_ACTION_STATUS.DISLIKED
+                                        : MESSAGE_ACTION_STATUS.NEUTRAL
+                                    }
+                                    likeCallback={likeCallback}
+                                    dislikeCallback={dislikeCallback}
+                                  />
+                                )}
+                              </View>
+                            );
+                          case "tool-weather":
+                            return (
+                              <View
+                                key={`${m.id}-${i}`}
+                                style={styles.messagePartContainer}
+                              >
+                                <Text style={styles.messageText}>
+                                  {JSON.stringify(part, null, 2)}
+                                </Text>
+                                {m.role === "assistant" && (
+                                  <MessageActions
+                                    id={m.id}
+                                    text={JSON.stringify(part, null, 2)}
+                                    status={
+                                      likedMessageIndexes.includes(m.id)
+                                        ? MESSAGE_ACTION_STATUS.LIKED
+                                        : dislikedMessageIndexes.includes(m.id)
+                                        ? MESSAGE_ACTION_STATUS.DISLIKED
+                                        : MESSAGE_ACTION_STATUS.NEUTRAL
+                                    }
+                                    likeCallback={likeCallback}
+                                    dislikeCallback={dislikeCallback}
+                                  />
+                                )}
+                              </View>
+                            );
+                        }
+                      })}
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+
+            {messages.length === 0 && (
+              <MessageSuggestions
+                onSelect={(text) => {
+                  sendMessage({ text });
+                  setInput("");
+                }}
+              />
+            )}
+
+            <ChatInput
+              value={input}
+              onChangeText={(text) => setInput(text)}
+              onSend={() => {
+                sendMessage({ text: input });
+                setInput("");
+              }}
+              placeholder="Ask Anything"
+              autoFocus={false}
+            />
+          </View>
+        </KeyboardAvoidingView>
       )}
     </SafeAreaView>
   );
@@ -126,6 +191,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     paddingHorizontal: 8,
     marginVertical: 10,
+    justifyContent: "space-between",
   },
   scrollView: {
     flex: 1,

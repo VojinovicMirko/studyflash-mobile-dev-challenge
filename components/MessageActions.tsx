@@ -5,29 +5,66 @@ import * as Clipboard from "expo-clipboard";
 import React from "react";
 import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
 
+import { MESSAGE_ACTION_STATUS } from "@/constants";
+
 interface MessageActionsProps {
   text: string;
+  status: MESSAGE_ACTION_STATUS;
+  id: string;
+  likeCallback: (id: string) => void;
+  dislikeCallback: (id: string) => void;
 }
 
-export const MessageActions: React.FC<MessageActionsProps> = ({ text }) => {
+export const MessageActions: React.FC<MessageActionsProps> = ({
+  text,
+  status,
+  id,
+  likeCallback,
+  dislikeCallback,
+}) => {
   const colorScheme = useColorScheme();
   const tintColor = Colors[colorScheme ?? "light"].icon;
-  const handleCopy = async () => {
+
+  const handleCopyToClipBoard = async () => {
     await Clipboard.setStringAsync(text);
     Alert.alert("Copied", "Message copied to clipboard");
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={handleCopy}>
+      <TouchableOpacity onPress={handleCopyToClipBoard}>
         <IconSymbol size={24} name="document.on.document" color={tintColor} />
       </TouchableOpacity>
-      <TouchableOpacity>
-        <IconSymbol size={24} name="hand.thumbsup" color={tintColor} />
-      </TouchableOpacity>
-      <TouchableOpacity>
-        <IconSymbol size={24} name="hand.thumbsdown" color={tintColor} />
-      </TouchableOpacity>
+
+      {(status === MESSAGE_ACTION_STATUS.LIKED ||
+        status === MESSAGE_ACTION_STATUS.NEUTRAL) && (
+        <TouchableOpacity onPress={() => likeCallback(id)}>
+          <IconSymbol
+            size={24}
+            name={
+              status === MESSAGE_ACTION_STATUS.LIKED
+                ? "hand.thumbsup.fill"
+                : "hand.thumbsup"
+            }
+            color={tintColor}
+          />
+        </TouchableOpacity>
+      )}
+
+      {(status === MESSAGE_ACTION_STATUS.DISLIKED ||
+        status === MESSAGE_ACTION_STATUS.NEUTRAL) && (
+        <TouchableOpacity onPress={() => dislikeCallback(id)}>
+          <IconSymbol
+            size={24}
+            name={
+              status === MESSAGE_ACTION_STATUS.DISLIKED
+                ? "hand.thumbsdown.fill"
+                : "hand.thumbsdown"
+            }
+            color={tintColor}
+          />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
