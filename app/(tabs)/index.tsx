@@ -9,9 +9,10 @@ import { generateAPIUrl } from "@/utils";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { fetch as expoFetch } from "expo/fetch";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Markdown from "react-native-markdown-display";
 
+import { LoadingDots } from "@/components/LoadingDots";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -23,14 +24,11 @@ import {
 } from "react-native";
 
 export default function App() {
+  const { isRegenerating, setIsRegenerating } = useAppContext();
+
   const colorScheme = useColorScheme();
 
-  const [input, setInput] = useState("");
-  const { isRegenerating, setIsRegenerating } = useAppContext();
-  const [likedMessageIndexes, setLikedMessagesIndexes] = useState<string[]>([]);
-  const [dislikedMessageIndexes, setDislikedMessagesIndexes] = useState<
-    string[]
-  >([]);
+  const scrollRef = useRef(null);
 
   const { messages, error, sendMessage, setMessages, status } = useChat({
     transport: new DefaultChatTransport({
@@ -39,6 +37,12 @@ export default function App() {
     }),
     onError: (error) => console.error(error, "ERROR"),
   });
+
+  const [input, setInput] = useState("");
+  const [likedMessageIndexes, setLikedMessagesIndexes] = useState<string[]>([]);
+  const [dislikedMessageIndexes, setDislikedMessagesIndexes] = useState<
+    string[]
+  >([]);
 
   const likeCallback = (messageId: string) => {
     setLikedMessagesIndexes([...likedMessageIndexes, messageId]);
@@ -55,6 +59,27 @@ export default function App() {
     }
   }, [isRegenerating]);
 
+  // svaki put kad se content promeni, skroluje na kraj
+  useEffect(() => {
+    if (scrollRef.current) {
+      (scrollRef.current as ScrollView).scrollToEnd({ animated: true });
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (status === "submitted") {
+      console.log("WAITING FOR RESPONSE...");
+    }
+
+    if (status === "streaming") {
+      console.log("RESPONSE STREAMING...");
+    }
+
+    if (status === "ready") {
+      console.log("RESPONSE SUBMITED!");
+    }
+  }, [status]);
+
   return (
     <SafeAreaView
       style={[
@@ -70,10 +95,8 @@ export default function App() {
           keyboardVerticalOffset={80}
         >
           <View style={styles.container}>
-            {/* <Markdown>{copy}</Markdown> */}
-
             {messages.length > 0 && (
-              <ScrollView style={styles.scrollView}>
+              <ScrollView ref={scrollRef} style={styles.scrollView}>
                 {messages.map((m) => (
                   <View
                     key={m.id}
@@ -148,6 +171,7 @@ export default function App() {
                     </View>
                   </View>
                 ))}
+                {status === "submitted" && <LoadingDots />}
               </ScrollView>
             )}
 
@@ -200,7 +224,7 @@ const styles = StyleSheet.create({
   messageContainer: {
     marginVertical: 4,
     borderRadius: 12,
-    padding: 14,
+    paddingHorizontal: 14,
   },
   userMessage: {
     width: "50%",
