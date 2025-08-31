@@ -8,6 +8,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { generateAPIUrl } from "@/utils";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import * as Haptics from "expo-haptics";
 import { fetch as expoFetch } from "expo/fetch";
 import React, { useEffect, useRef, useState } from "react";
 import Markdown from "react-native-markdown-display";
@@ -67,16 +68,8 @@ export default function App() {
   }, [messages]);
 
   useEffect(() => {
-    if (status === "submitted") {
-      console.log("WAITING FOR RESPONSE...");
-    }
-
-    if (status === "streaming") {
-      console.log("RESPONSE STREAMING...");
-    }
-
     if (status === "ready") {
-      console.log("RESPONSE SUBMITED!");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
   }, [status]);
 
