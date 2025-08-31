@@ -14,6 +14,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Markdown from "react-native-markdown-display";
 
 import { LoadingDots } from "@/components/LoadingDots";
+import { WeatherData, WeatherWidget } from "@/components/WeatherWidget";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -51,6 +52,48 @@ export default function App() {
 
   const dislikeCallback = (messageId: string) => {
     setDislikedMessagesIndexes([...dislikedMessageIndexes, messageId]);
+  };
+
+  const parseWeatherUnknown = (
+    input: unknown
+  ): WeatherData | null | undefined => {
+    if (typeof input === "string") {
+      try {
+        input = JSON.parse(input); // parsiramo string u objekt
+      } catch {
+        console.error("Invalid JSON string");
+        return null;
+      }
+    }
+
+    // sada je input objekt, proveravamo da li ima potrebna polja i tipove
+    if (
+      typeof input === "object" &&
+      input !== null &&
+      "location" in input &&
+      "temperature" in input &&
+      "humidity" in input &&
+      "windSpeed" in input &&
+      "condition" in input
+    ) {
+      const obj = input as Record<string, unknown>;
+
+      if (
+        typeof obj.location === "string" &&
+        typeof obj.temperature === "number" &&
+        typeof obj.humidity === "number" &&
+        typeof obj.windSpeed === "number" &&
+        typeof obj.condition === "string"
+      ) {
+        return {
+          location: obj.location,
+          temperature: obj.temperature,
+          humidity: obj.humidity,
+          windSpeed: obj.windSpeed,
+          condition: obj.condition,
+        };
+      }
+    }
   };
 
   useEffect(() => {
@@ -139,9 +182,10 @@ export default function App() {
                                 key={`${m.id}-${i}`}
                                 style={styles.messagePartContainer}
                               >
-                                <Text style={styles.messageText}>
-                                  {JSON.stringify(part, null, 2)}
-                                </Text>
+                                <WeatherWidget
+                                  data={parseWeatherUnknown(part.output)}
+                                />
+
                                 {m.role === "assistant" && (
                                   <MessageActions
                                     id={m.id}

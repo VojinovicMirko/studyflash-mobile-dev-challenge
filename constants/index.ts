@@ -9,3 +9,11 @@ export const MOCK_SUGGESTIONS = [
   "Give me some productivity tips",
   "Explain React Native in simple terms",
 ];
+
+export const mockedWeatherData = {
+  location: "Novi Sad",
+  temperature: 28,
+  humidity: 65,
+  windSpeed: 12,
+  condition: "Partly Cloudy",
+};
